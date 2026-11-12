@@ -1,0 +1,12 @@
+import http from 'node:http';
+import fs from 'node:fs/promises';
+import {createReadStream,createWriteStream} from 'node:fs';
+import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
+import path from 'node:path';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const storage=process.env.STUDIO_LOCAL_STORAGE||'/private/tmp/studio-review-dev';await fs.mkdir(storage,{recursive:true});
+const bucket={async put(key,body,options){const id=path.basename(key);await pipeline(Readable.fromWeb(body),createWriteStream(path.join(storage,id),{flags:'wx'}));await fs.writeFile(path.join(storage,id+'.meta'),JSON.stringify(options.customMetadata));return {key}},async get(key){const file=path.join(storage,path.basename(key));try{await fs.access(file);return {body:Readable.toWeb(createReadStream(file)),customMetadata:JSON.parse(await fs.readFile(file+'.meta','utf8'))}}catch{return null}}};
+const workerPath=path.join(root,'dist/server/index.js');let modified=0,worker;
+const server=http.createServer(async(req,res)=>{try{const stat=await fs.stat(workerPath);if(stat.mtimeMs!==modified){worker=(await import(pathToFileURL(workerPath)+'?v='+stat.mtimeMs)).default;modified=stat.mtimeMs}const request=new Request('http://127.0.0.1:8765'+req.url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Readable.toWeb(req),duplex:'half'}:{})});const response=await worker.fetch(request,{BUCKET:bucket});res.writeHead(response.status,Object.fromEntries(response.headers));if(response.body)await pipeline(Readable.fromWeb(response.body),res);else res.end()}catch{res.writeHead(500);res.end('Preview error')}});server.listen(8765,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:8765'));

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import worker from '../dist/server/index.js';
+const objects=new Map();const env={BUCKET:{async put(key,body,options){if(objects.has(key))return null;objects.set(key,{bytes:new Uint8Array(await new Response(body).arrayBuffer()),customMetadata:options.customMetadata});return {key}},async get(key){const object=objects.get(key);return object?{body:new Response(object.bytes).body,customMetadata:object.customMetadata}:null}}};
+const request=(path,method='GET',value,extra={})=>new Request('https://studio.test'+path,{method,headers:{...(value?{'Content-Type':'application/json','X-Mockup-Request':'save','Content-Length':String(new TextEncoder().encode(value).length),Origin:'https://studio.test'}:{}),...extra},...(value?{body:value}:{})});
+assert.equal((await worker.fetch(request('/api/health'),env)).status,200);assert.equal((await worker.fetch(request('/api/health'),{})).status,503);
+const snapshot=JSON.stringify({schemaVersion:1,images:[{name:'test',src:'data:image/png;base64,AAAA'}]});
+const saved=await (await worker.fetch(request('/api/previews','POST',snapshot),env)).json();assert.match(saved.path,/^\/review\/[a-f0-9-]{36}$/);
+const loaded=await (await worker.fetch(request('/api/previews/'+saved.id),env)).json();assert.deepEqual(loaded.composition,JSON.parse(snapshot));
+const second=await (await worker.fetch(request('/api/previews','POST','{"schemaVersion":1,"images":[]}'),env)).json();assert.notEqual(second.id,saved.id);assert.deepEqual((await (await worker.fetch(request('/api/previews/'+saved.id),env)).json()).composition,loaded.composition);
+assert.equal((await worker.fetch(request('/api/previews/'+saved.id,'DELETE'),env)).status,405);
+assert.equal((await worker.fetch(request('/api/previews','POST',snapshot,{'Origin':'https://elsewhere.test'}),env)).status,403);
+assert.equal((await worker.fetch(request('/api/previews','POST',snapshot,{'X-Mockup-Request':'other'}),env)).status,400);
+assert.equal((await worker.fetch(request('/api/previews','POST',snapshot,{'Content-Length':String(101*1024*1024)}),env)).status,413);
+assert.equal((await worker.fetch(request('/api/previews/not-a-version'),env)).status,400);
+assert.equal((await worker.fetch(request('/api/previews/00000000-0000-4000-8000-000000000000'),env)).status,404);
+assert.equal((await worker.fetch(request('/review/'+saved.id),env)).status,200);assert.equal((await worker.fetch(request('/review/not-a-version'),env)).status,404);
+const failing={BUCKET:{async put(){throw Error('storage error')}}};assert.equal((await worker.fetch(request('/api/previews','POST',snapshot),failing)).status,503);
+console.log('PASS: version create/read, streamed round trip, immutable IDs, read-only methods, storage failure, cross-site/size/header validation, review routing.');
