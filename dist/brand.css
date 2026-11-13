@@ -1,0 +1,14 @@
+/* FS.com controls sampled from the live official site: #c00000 / #19191a / #646466 / #e5e5e5. */
+:root{--brand:#c00000;--brand-hover:#a80000;--brand-soft:#fff5f5;--brand-border:#e7b3b3;--text-primary:#19191a;--text-secondary:#646466;--text-muted:#89898c;--border:#e5e5e5;--surface:#fff;--surface-muted:#f7f7f7;--control-height:36px;--control-radius:4px;--blue:var(--brand)}
+/* Native selects preserve keyboard navigation, focus, and screen-reader behavior. */
+.scene-select{position:relative;display:inline-flex;align-items:center;width:154px;height:var(--control-height);flex-shrink:0;color:var(--text-secondary)}
+.scene-select>svg{position:absolute;left:11px;width:16px;height:16px;pointer-events:none;z-index:1}
+.scene-select>svg.select-chevron{left:auto;right:10px;width:14px;height:14px;transform:rotate(90deg)}
+.scene-select select,.setup-screen select,dialog select{appearance:none;-webkit-appearance:none;box-sizing:border-box;height:var(--control-height);min-height:var(--control-height);border:1px solid #ccc;border-radius:var(--control-radius);background-color:var(--surface);color:var(--text-primary);font-family:inherit;font-size:13px;font-weight:400;line-height:1.4;box-shadow:none;transition:border-color .15s,box-shadow .15s;cursor:pointer}
+.scene-select select{width:100%;padding:0 30px 0 35px;background-image:none}
+.setup-screen select,dialog select{padding:0 32px 0 12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23646466' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px}
+.scene-select select:hover,.setup-screen select:hover,dialog select:hover{border-color:var(--text-primary)}
+.scene-select select:focus-visible,.setup-screen select:focus-visible,dialog select:focus-visible{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px #c0000014}
+.scene-select select:disabled,.setup-screen select:disabled,dialog select:disabled{border-color:var(--border);background-color:#f6f6f8;color:#aaa;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+@media(max-width:680px){.scene-select{width:142px}}
