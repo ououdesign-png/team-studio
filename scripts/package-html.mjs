@@ -1,0 +1,41 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+let html=await fs.readFile(path.join(root,'dist/index.html'),'utf8');
+const style=await fs.readFile(path.join(root,'dist/style.css'),'utf8');
+const brand=await fs.readFile(path.join(root,'dist/brand.css'),'utf8');
+const selects=await fs.readFile(path.join(root,'dist/select-controls.js'),'utf8');
+let app=await fs.readFile(path.join(root,'dist/app.js'),'utf8');
+let editor=await fs.readFile(path.join(root,'dist/editor.html'),'utf8');
+// Blob documents inherit the containing file's opaque origin. Use '*' only in that case.
+editor=editor.replaceAll("location.protocol==='file:'","location.origin==='null'");
+const offlineCheck='location.protocol==="file:"';
+if(editor.split(offlineCheck).length!==2)throw Error('Review offline entrypoint changed; recheck portable integration.');
+editor=editor.replace(offlineCheck,'true');
+const offlineText='当前为离线文件。请从公司部署的工具地址打开，或由开发人员启动本机交接服务后验证分享。';
+const escapedOfflineText=[...offlineText].map(c=>c.charCodeAt(0)>127?'\\u'+c.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0'):c).join('');
+if(!editor.includes(escapedOfflineText))throw Error('Offline message changed; recheck portable integration.');
+editor=editor.replace(escapedOfflineText,'当前是单文件离线版。可制作、预览和导出样机；生成在线评审链接需要从已部署的服务地址打开。');
+editor=editor.replace('每次保存生成独立只读版本，不覆盖旧链接。访问权限与当前平台一致；请仅向有平台访问权限的同事分享。','离线版可导出 JPG/PDF 发给同事。在线评审链接需要保存服务，离线文件不会生成临时链接。');
+const frameMarker="frame=$('#engineFrame');";
+if(app.split(frameMarker).length!==2||!app.includes('src="editor.html#/mockup/business"'))throw Error('Editor mount changed; recheck portable integration.');
+app=app.replace('src="editor.html#/mockup/business"','data-embedded-editor="true"');
+app=app.replace(frameMarker,frameMarker+"frame.src=URL.createObjectURL(new Blob([STUDIO_EMBEDDED_EDITOR],{type:'text/html;charset=utf-8'}))+'#/mockup/business';");
+app=app.replaceAll('生成分享链接','分享说明').replaceAll('草稿本地保存 · 评审版本独立保存','单文件离线使用 · 草稿保存在本浏览器');
+// Opaque-origin blob frames lack randomUUID in Chrome; getRandomValues remains available.
+const portableCrypto="if(typeof crypto.randomUUID!=='function'){Object.defineProperty(crypto,'randomUUID',{value:function(){const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20)}})};\n";
+editor=editor.replace(/<script\b[^>]*>/,tag=>tag+portableCrypto);
+const encodedEditor=JSON.stringify(editor).replaceAll('<','\\u003c');
+const inlineApp=(portableCrypto+'const STUDIO_EMBEDDED_EDITOR='+encodedEditor+';\n'+selects+'\n'+app).replaceAll('</script','<\\/script');
+const styles='<style>\n'+style+'\n'+brand+'\n</style>';
+if(!html.includes('<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="brand.css">')||!html.includes('<script src="select-controls.js"></script><script src="app.js"></script>'))throw Error('Shell includes changed; recheck portable integration.');
+html=html.replace('<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="brand.css">',()=>styles);
+html=html.replace('<script src="select-controls.js"></script><script src="app.js"></script>',()=>'<script>\n'+inlineApp+'\n</script>');
+html=html.replace('完整样机 <i>V2.1</i>','单文件离线版 <i>V2.1</i>');
+const output=path.resolve(root,'单文件交付/视觉设计样机平台-单文件版.html');
+await fs.mkdir(path.dirname(output),{recursive:true});await fs.writeFile(output,html);
+// Keep the existing delivery link in the parent workspace current.
+const workspaceOutput=path.resolve(root,'../单文件交付/视觉设计样机平台-单文件版.html');
+await fs.mkdir(path.dirname(workspaceOutput),{recursive:true});await fs.writeFile(workspaceOutput,html);
+console.log(JSON.stringify({file:output,bytes:Buffer.byteLength(html),externalScripts:0,externalStylesheets:0,editor:'embedded'}));

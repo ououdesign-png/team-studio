@@ -1,6 +1,6 @@
 /* FS.com controls sampled from the live official site: #c00000 / #19191a / #646466 / #e5e5e5. */
 :root{--brand:#c00000;--brand-hover:#a80000;--brand-soft:#fff5f5;--brand-border:#e7b3b3;--text-primary:#19191a;--text-secondary:#646466;--text-muted:#89898c;--border:#e5e5e5;--surface:#fff;--surface-muted:#f7f7f7;--control-height:36px;--control-radius:4px;--blue:var(--brand)}
-/* Native selects preserve keyboard navigation, focus, and screen-reader behavior. */
+/* Shared field dimensions and brand tokens. */
 .scene-select{position:relative;display:inline-flex;align-items:center;width:154px;height:var(--control-height);flex-shrink:0;color:var(--text-secondary)}
 .scene-select>svg{position:absolute;left:11px;width:16px;height:16px;pointer-events:none;z-index:1}
 .scene-select>svg.select-chevron{left:auto;right:10px;width:14px;height:14px;transform:rotate(90deg)}
@@ -12,3 +12,65 @@
 .scene-select select:disabled,.setup-screen select:disabled,dialog select:disabled{border-color:var(--border);background-color:#f6f6f8;color:#aaa;cursor:not-allowed}
 button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 @media(max-width:680px){.scene-select{width:142px}}
+/* Fully themed select menus. Native selects remain hidden as the existing form contract. */
+select.fs-native-select{display:none!important}
+.fs-select{display:inline-flex;position:relative;vertical-align:middle;max-width:100%;min-width:0;width:100%;box-sizing:border-box}
+.fs-select .fs-select-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:36px;min-height:36px;margin:0;padding:0 11px 0 12px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;background:#fff;background-image:none;color:#19191a;font-family:inherit;font-size:13px;font-weight:400;line-height:1.4;text-align:left;cursor:pointer;box-shadow:none;transition:border-color .15s,box-shadow .15s}
+.fs-select-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs-select-arrow{display:flex;flex-shrink:0;color:#646466;transition:transform .15s}
+.fs-select-arrow svg,.fs-select-check svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.fs-select .fs-select-trigger:hover:not(:disabled){background:var(--brand-soft);border-color:var(--brand-border);color:var(--brand)}
+.fs-select .fs-select-trigger[aria-expanded=true],.fs-select .fs-select-trigger:focus-visible{outline:0;border-color:#c00000;box-shadow:0 0 0 3px #c0000014}
+.fs-select-trigger[aria-expanded=true] .fs-select-arrow{transform:rotate(180deg)}
+.fs-select .fs-select-trigger:disabled{background:#f6f6f8;border-color:#e5e5e5;color:#aaa;cursor:not-allowed;box-shadow:none}
+.scene-select>.select-chevron{display:none}.scene-select>.fs-select .fs-select-trigger{padding-left:35px}
+#scene-options .fs-select{width:280px;max-width:100%}.placement-fields .fs-select{width:100%}.product-variant .fs-select{width:160px}
+.fs-select-menu{position:fixed;z-index:10000;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:4px;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#19191a;font-family:inherit;font-size:13px;line-height:1.4;box-sizing:border-box;box-shadow:0 6px 24px #19191a14;scrollbar-width:thin;scrollbar-color:#ccc transparent}
+.fs-select-option{position:relative;display:flex;align-items:center;gap:8px;min-height:36px;box-sizing:border-box;margin:0;padding:8px 28px 8px 10px;border:0;border-radius:3px;background:transparent;color:#19191a;font-size:13px;font-weight:400;line-height:1.4;cursor:pointer;user-select:none}
+.fs-select-option-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs-select-option:hover,.fs-select-option.is-active{background:#f7f7f7}
+.fs-select-option[aria-selected=true]{background:#fff5f5;color:#c00000;font-weight:500}
+.fs-select-check{position:absolute;right:8px;top:50%;display:flex;transform:translateY(-50%);color:#c00000}
+.fs-select-option[aria-disabled=true]{color:#aaa;background:transparent;cursor:not-allowed}
+.fs-select-group{padding:8px 10px 4px;color:#89898c;font-size:11px;line-height:1.5}
+@media(max-width:680px){#scene-options .fs-select{width:100%}.fs-select-menu{max-width:calc(100vw - 16px)}}
+
+/* Collapsible platform navigation; mobile keeps the existing drawer. */
+.sidebar-toggle{display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;border-radius:4px;color:#89898c;font-size:12px;margin-top:12px;text-align:left}
+.sidebar-toggle svg{width:16px;height:16px}.sidebar-toggle:hover{background:#eee;color:#19191a}
+.new-task .nav-label{margin:0;font-size:inherit;opacity:1;font-weight:inherit}.help-btn .nav-label{margin:0}
+@media(min-width:681px){
+ .app.sidebar-collapsed{--sidebar:72px}
+ .sidebar-collapsed .sidebar{padding-left:12px;padding-right:12px}
+ .sidebar-collapsed .brand{justify-content:center;padding:0 0 26px}
+ .sidebar-collapsed .brand>span:last-child,.sidebar-collapsed .nav-label,.sidebar-collapsed .shortcut,.sidebar-collapsed .nav-count,.sidebar-collapsed .side-label,.sidebar-collapsed .side-tasks,.sidebar-collapsed .roadmap,.sidebar-collapsed .help-arrow{display:none}
+ .sidebar-collapsed .new-task,.sidebar-collapsed nav a,.sidebar-collapsed .help-btn,.sidebar-collapsed .sidebar-toggle{justify-content:center;padding:11px 0}
+ .sidebar-collapsed .sidebar-toggle svg{transform:rotate(180deg)}
+ .sidebar-collapsed .help-btn{margin-top:4px}
+}
+@media(max-width:680px){.sidebar-toggle{display:none}}
+
+/* Navigation hints use the same surface, border and text tokens as dropdowns. */
+.sidebar [data-tooltip]{position:relative}
+.sidebar [data-tooltip]::after{content:attr(data-tooltip);position:absolute;left:32px;top:calc(50% + 12px);z-index:100;padding:8px 12px;border:1px solid var(--border,#e5e5e5);border-radius:4px;background:var(--surface,#fff);color:var(--text,#19191a);box-shadow:0 4px 16px #19191a14;font-size:12px;font-weight:400;line-height:1.5;letter-spacing:0;white-space:nowrap;pointer-events:none;visibility:hidden;opacity:0}
+@media(min-width:681px){
+ .sidebar-bottom{padding-bottom:32px}
+ .sidebar [data-tooltip]:hover::after{visibility:visible;opacity:1;transition:opacity .12s .25s,visibility 0s .25s}
+ .sidebar [data-tooltip]:focus-visible::after{visibility:visible;opacity:1}
+}
+
+/* Make the task name visibly editable without competing with task actions. */
+.task-name-field{position:relative;display:inline-flex;align-items:center;vertical-align:middle}
+#engineHost .studio-name .task-name-field input{border:1px solid #e5e5e5;background:#fff;padding:7px 30px 7px 9px;min-height:34px}
+#engineHost .studio-name .task-name-field input:hover{border-color:#ccc}
+#engineHost .studio-name .task-name-field input:focus{border-color:#c00000!important;box-shadow:0 0 0 2px #c000000a}
+.task-name-field>svg{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#89898c;pointer-events:none}
+
+#engineHost .studio-name>div{display:flex;align-items:center;gap:16px;min-width:0}
+#engineHost #saveStatus{white-space:nowrap}
+
+/* Shared spacing scale for platform chrome and editor controls. */
+:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px}
+
+/* Disabled actions never acquire pointer hover or show hover hints. */
+:is(.sidebar,.topbar,.studio-bar,#main,.setup-screen,.preview-toolbar,dialog) button:disabled{pointer-events:none}
